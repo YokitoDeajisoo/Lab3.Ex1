@@ -1,70 +1,109 @@
 ﻿using System;
+using System.Linq;
 
 class Program
 {
-    // Перевірка, чи слово є паліндромом
-    static bool IsPalindrome(string word)
-    {
-        word = word.ToLower();
-        int i = 0, j = word.Length - 1;
-        while (i < j)
-        {
-            if (word[i] != word[j]) return false;
-            i++; j--;
-        }
-        return true;
-    }
-
-    // Підрахунок приголосних у слові
-    static int CountConsonants(string word)
-    {
-        string vowels = "аеєиiїоуюяaeiouy"; // українські + англійські голосні
-        int count = 0;
-        foreach (char c in word.ToLower())
-        {
-            if (Char.IsLetter(c) && !vowels.Contains(c)) count++;
-        }
-        return count;
-    }
+    static string text = ""; // збережений текст
 
     static void Main()
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8; // щоб коректно виводились укр. букви
-
-        try
+        while (true)
         {
-            Console.WriteLine("Введiть текстовий рядок:");
-            string input = Console.ReadLine();
+            Console.WriteLine("=== МЕНЮ ===");
+            Console.WriteLine("1 - Ввести текст");
+            Console.WriteLine("2 - Видалити слова з непарною кiлькiстю приголосних");
+            Console.WriteLine("3 - Видалити слова-палiндроми");
+            Console.WriteLine("0 - Вихiд");
+            Console.Write("Ваш вибiр: ");
 
-            if (string.IsNullOrWhiteSpace(input))
-                throw new Exception("Рядок порожній! Введіть текст.");
+            string choice = Console.ReadLine();
 
-            // ✅ Розбиваємо на слова по пробілах і розділових знаках
-            string[] words = input.Split(
-                new char[] { ' ', ',', '.', '!', '?', ';', ':', '-', '—' },
-                StringSplitOptions.RemoveEmptyEntries
-            );
-
-            Console.WriteLine("\nРезультат:");
-
-            foreach (string word in words)
+            // перевірка правильності вводу
+            if (choice != "0" && choice != "1" && choice != "2" && choice != "3")
             {
-                if (string.IsNullOrEmpty(word)) continue;
+                Console.WriteLine("❌ Помилка! Виберiть пункт з меню (0-3).");
+                Console.WriteLine();
+                continue;
+            }
 
-                int consonants = CountConsonants(word);
+            if (choice == "0")
+            {
+                Console.WriteLine("Програму завершено.");
+                break;
+            }
 
-                // умова: видалити слово, якщо непарна кількість приголосних або якщо воно паліндром
-                if (consonants % 2 != 0 || IsPalindrome(word))
-                    continue;
+            switch (choice)
+            {
+                case "1":
+                    Console.Write("Введiть текст: ");
+                    text = Console.ReadLine();
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        Console.WriteLine("❌ Ви нiчого не ввели!");
+                        text = "";
+                    }
+                    else
+                    {
+                        Console.WriteLine("✅ Текст успiшно збережено!");
+                    }
+                    break;
 
-                Console.Write(word + " ");
+                case "2":
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        Console.WriteLine("❗ Спочатку введiть текст (пункт 1).");
+                    }
+                    else
+                    {
+                        text = RemoveOddConsonantWords(text);
+                        Console.WriteLine("Результат: " + text);
+                    }
+                    break;
+
+                case "3":
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        Console.WriteLine("❗ Спочатку введiть текст (пункт 1).");
+                    }
+                    else
+                    {
+                        text = RemovePalindromes(text);
+                        Console.WriteLine("Результат: " + text);
+                    }
+                    break;
             }
 
             Console.WriteLine();
         }
-        catch (Exception e)
+    }
+
+    // а) Видаляє слова з непарною кількістю приголосних
+    static string RemoveOddConsonantWords(string input)
+    {
+        string consonants = "бвгґджзйклмнпрстфхцчшщ";
+        var words = input.Split(new[] { ' ', ',', '.', '!', '?', ';', ':' }, StringSplitOptions.RemoveEmptyEntries);
+
+        var result = words.Where(w =>
         {
-            Console.WriteLine("Помилка: " + e.Message);
-        }
+            int count = w.ToLower().Count(c => consonants.Contains(c));
+            return count % 2 == 0; // залишаємо тільки слова з парною кількістю приголосних
+        });
+
+        return string.Join(" ", result);
+    }
+
+    // б) Видаляє слова-паліндроми
+    static string RemovePalindromes(string input)
+    {
+        var words = input.Split(new[] { ' ', ',', '.', '!', '?', ';', ':' }, StringSplitOptions.RemoveEmptyEntries);
+
+        var result = words.Where(w =>
+        {
+            string lower = w.ToLower();
+            string reversed = new string(lower.Reverse().ToArray());
+            return lower != reversed; // залишаємо лише не паліндроми
+        });
+
+        return string.Join(" ", result);
     }
 }
